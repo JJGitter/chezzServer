@@ -7,7 +7,7 @@ const io = new Server(9000, {
 io.on("connection", (socket) => {
   console.log("Someone connected with socket id: " + socket.id);
   socket.on("disconnect", () => {
-    console.log("User Disconnected", socket.id);
+    console.log("User Disconnected " + socket.id);
   });
 
   socket.on("join_room", (roomID) => {
@@ -15,8 +15,7 @@ io.on("connection", (socket) => {
     const clientsInRoom = io.sockets.adapter.rooms.get(roomID);
     socket.join(roomID);
     if (clientsInRoom && clientsInRoom.size > 0) {
-      //if there are more than 1 person in the room, jump both players to Game screen.
-      io.sockets.in(roomID).emit("second_user_joined");
+      socket.to(roomID).emit("server_request_for_gameData")
       console.log("There are other clients in the room");
     } else {
       console.log("This is the first client in the room");
@@ -27,5 +26,13 @@ io.on("connection", (socket) => {
 
   socket.on("send_message", (data) => {
     socket.to(data.room).emit("receive_message", data);
+  });
+
+  socket.on("gameData_to_server", (room, userColor, selectedTimeControl) => {
+    socket.to(room).emit("gameData_to_client", userColor, selectedTimeControl);
+  })
+
+  socket.on("piece_moved", (room, fromSquare, toSquare, pieceType, pieceColor) => {
+    socket.to(room).emit("opponent_moved", fromSquare, toSquare, pieceType, pieceColor);
   });
 });
