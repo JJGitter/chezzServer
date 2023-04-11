@@ -6,24 +6,42 @@ const io = new Server(9000, {
 let timerInterval;
 let whiteTime;
 let blackTime;
+let gameList = [];
 
 io.on("connection", (socket) => {
   console.log("Someone connected with socket id: " + socket.id);
+  console.log(gameList);
+  socket.emit("existing_gameList_from_server", gameList);
   socket.on("disconnect", () => {
+    gameList = gameList.filter((game) => game.key !== socket.id);
+    io.sockets.emit("existing_gameList_from_server", gameList);
     console.log("User Disconnected " + socket.id);
   });
 
-  socket.on("join_room", (roomID) => {
+  socket.on("create_game", (user, timeControl, roomID) => {
     //check if there are other clients in the room
-    const clientsInRoom = io.sockets.adapter.rooms.get(roomID);
     socket.join(roomID);
-    if (clientsInRoom && clientsInRoom.size > 0) {
-      socket.to(roomID).emit("server_request_for_gameData");
-      console.log("There are other clients in the room");
-    } else {
-      console.log("This is the first client in the room");
-    }
+    let game = {
+      key: socket.id,
+      createdBy: user,
+      timeControl: timeControl,
+      room: roomID,
+    };
+    gameList.push(game);
+    socket.broadcast.emit("game_was_created", gameList);
 
+    console.log(`User with ID: ${socket.id} joined room: ${roomID}`);
+  });
+
+  socket.on("join_game_request", (roomID) => {
+    socket.join(roomID);
+
+    //As the game is full, remove the game from gameList in server and clients.
+    //------------
+    gameList.filter((game) => game.room !== roomID);
+    io.sockets.emit("existing_gameList_from_server", gameList);
+    //------------
+    socket.to(roomID).emit("server_request_for_gameData");
     console.log(`User with ID: ${socket.id} joined room: ${roomID}`);
   });
 
@@ -55,6 +73,7 @@ io.on("connection", (socket) => {
   socket.on(
     "piece_moved",
     (room, fromSquare, toSquare, pieceType, pieceColor) => {
+      console.log("piece moved");
       provideTimeToClients(pieceColor, room);
       socket
         .to(room)
@@ -91,4 +110,3 @@ function provideTimeToClients(pieceColor, room) {
     }
   }, 1000);
 }
-
