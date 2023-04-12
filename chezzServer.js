@@ -7,6 +7,7 @@ let timerInterval;
 let whiteTime;
 let blackTime;
 let gameList = [];
+let roomID = 0;
 
 io.on("connection", (socket) => {
   console.log("Someone connected with socket id: " + socket.id);
@@ -18,8 +19,8 @@ io.on("connection", (socket) => {
     console.log("User Disconnected " + socket.id);
   });
 
-  socket.on("create_game", (user, timeControl, roomID) => {
-    //check if there are other clients in the room
+  socket.on("create_game", (user, timeControl) => {
+    roomID++;
     socket.join(roomID);
     let game = {
       key: socket.id,
@@ -33,23 +34,30 @@ io.on("connection", (socket) => {
     console.log(`User with ID: ${socket.id} joined room: ${roomID}`);
   });
 
-  socket.on("join_game_request", (roomID) => {
-    socket.join(roomID);
+  socket.on("join_game_request", (room) => {
+    socket.join(room);
 
     //As the game is full, remove the game from gameList in server and clients.
     //------------
-    gameList.filter((game) => game.room !== roomID);
+    gameList.filter((game) => game.room !== room);
     io.sockets.emit("existing_gameList_from_server", gameList);
     //------------
-    socket.to(roomID).emit("server_request_for_gameData");
-    console.log(`User with ID: ${socket.id} joined room: ${roomID}`);
+    socket.to(room).emit("server_request_for_gameData");
+    console.log(`User with ID: ${socket.id} joined room: ${room}`);
   });
 
   socket.on("send_message", (data) => {
-    socket.to(data.room).emit("receive_message", data);
+    let room = Array.from(socket.rooms)[1];
+    socket.to(room).emit("receive_message", data);
   });
 
-  socket.on("gameData_to_server", (room, userColor, selectedTimeControl) => {
+  socket.on("gameData_to_server", (userColor, selectedTimeControl) => {
+    let room = Array.from(socket.rooms)[1];
+    console.log("sending gameData to 2nd client");
+    console.log("room" + room);
+    // console.log(socket.rooms);
+    // console.log(Array.from(socket.rooms)[1]);
+    
     socket.to(room).emit("gameData_to_client", userColor, selectedTimeControl);
     switch (selectedTimeControl) {
       case "classical":
@@ -72,7 +80,8 @@ io.on("connection", (socket) => {
 
   socket.on(
     "piece_moved",
-    (room, fromSquare, toSquare, pieceType, pieceColor) => {
+    (fromSquare, toSquare, pieceType, pieceColor) => {
+      let room = Array.from(socket.rooms)[1];
       console.log("piece moved");
       provideTimeToClients(pieceColor, room);
       socket
@@ -81,16 +90,19 @@ io.on("connection", (socket) => {
     }
   );
 
-  socket.on("resign", (room, userColor) => {
+  socket.on("resign", (userColor) => {
+    let room = Array.from(socket.rooms)[1];
     socket.to(room).emit("opponent_resigns", userColor);
     clearInterval(timerInterval);
   });
 
-  socket.on("offer_draw", (room) => {
+  socket.on("offer_draw", () => {
+    let room = Array.from(socket.rooms)[1];
     socket.to(room).emit("receive_draw_offer");
   });
 
-  socket.on("draw_accepted", (room) => {
+  socket.on("draw_accepted", () => {
+    let room = Array.from(socket.rooms)[1];
     socket.to(room).emit("receive_draw_accepted");
     clearInterval(timerInterval);
   });
