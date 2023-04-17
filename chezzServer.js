@@ -11,7 +11,6 @@ let roomID = 0;
 
 io.on("connection", (socket) => {
   console.log("Someone connected with socket id: " + socket.id);
-  console.log(gameList);
   socket.emit("existing_gameList_from_server", gameList);
   socket.on("disconnect", () => {
     gameList = gameList.filter((game) => game.key !== socket.id);
@@ -51,14 +50,11 @@ io.on("connection", (socket) => {
     socket.to(room).emit("receive_message", data);
   });
 
-  socket.on("gameData_to_server", (userColor, selectedTimeControl) => {
+  socket.on("gameData_to_server", (userColor, selectedTimeControl, FEN) => {
     let room = Array.from(socket.rooms)[1];
-    console.log("sending gameData to 2nd client");
-    console.log("room" + room);
-    // console.log(socket.rooms);
-    // console.log(Array.from(socket.rooms)[1]);
+    console.log("sending gameData to 2nd client via room" + room);
     
-    socket.to(room).emit("gameData_to_client", userColor, selectedTimeControl);
+    socket.to(room).emit("gameData_to_client", userColor, selectedTimeControl, FEN);
     switch (selectedTimeControl) {
       case "classical":
         whiteTime = 1800;
