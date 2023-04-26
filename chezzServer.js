@@ -13,6 +13,11 @@ let blackTime;
 let gameList = [];
 let roomID = 0;
 
+io.listen(process.env.PORT || 9000, () => {
+  console.log("server is running");
+  console.log("port=" + process.env.PORT);
+});
+
 io.on("connection", (socket) => {
   console.log("Someone connected with socket id: " + socket.id);
   socket.emit("existing_gameList_from_server", gameList);
@@ -57,8 +62,10 @@ io.on("connection", (socket) => {
   socket.on("gameData_to_server", (userColor, selectedTimeControl, FEN) => {
     let room = Array.from(socket.rooms)[1];
     console.log("sending gameData to 2nd client via room" + room);
-    
-    socket.to(room).emit("gameData_to_client", userColor, selectedTimeControl, FEN);
+
+    socket
+      .to(room)
+      .emit("gameData_to_client", userColor, selectedTimeControl, FEN);
     switch (selectedTimeControl) {
       case "classical":
         whiteTime = 1800;
@@ -78,17 +85,14 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on(
-    "piece_moved",
-    (fromSquare, toSquare, pieceType, pieceColor) => {
-      let room = Array.from(socket.rooms)[1];
-      console.log("piece moved");
-      provideTimeToClients(pieceColor, room);
-      socket
-        .to(room)
-        .emit("opponent_moved", fromSquare, toSquare, pieceType, pieceColor);
-    }
-  );
+  socket.on("piece_moved", (fromSquare, toSquare, pieceType, pieceColor) => {
+    let room = Array.from(socket.rooms)[1];
+    console.log("piece moved");
+    provideTimeToClients(pieceColor, room);
+    socket
+      .to(room)
+      .emit("opponent_moved", fromSquare, toSquare, pieceType, pieceColor);
+  });
 
   socket.on("resign", (userColor) => {
     let room = Array.from(socket.rooms)[1];
