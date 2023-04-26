@@ -3,8 +3,11 @@ import { Server } from "socket.io";
 // const io = new Server(9000, {
 //   cors: { origin: ["http://localhost:3000"] },
 // });
+// const io = new Server({
+//   cors: { origin: ["https://jjgitter.github.io/chezz/"] },
+// });
 const io = new Server({
-  cors: { origin: ["https://jjgitter.github.io/chezz/"] },
+  cors: { origin: "*", methods: ["GET", "POST"] },
 });
 //point to https://jjgitter.github.io/chezz/ with no port
 let timerInterval;
