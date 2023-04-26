@@ -48,7 +48,7 @@ io.on("connection", (socket) => {
     //As the game is full, remove the game from gameList in server and clients.
     //------------
     console.log(gameList);
-    console.log(`removing game ${game.room} from the list`);
+    console.log(`removing game from the list`);
     gameList.filter((game) => game.room !== room);
     console.log(gameList);
     io.sockets.emit("existing_gameList_from_server", gameList);
