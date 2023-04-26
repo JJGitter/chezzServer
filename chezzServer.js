@@ -3,13 +3,10 @@ import { Server } from "socket.io";
 // const io = new Server(9000, {
 //   cors: { origin: ["http://localhost:3000"] },
 // });
-// const io = new Server({
-//   cors: { origin: ["https://jjgitter.github.io/chezz/"] },
-// });
+
 const io = new Server({
   cors: { origin: "*", methods: ["GET", "POST"] },
 });
-//point to https://jjgitter.github.io/chezz/ with no port
 let timerInterval;
 let whiteTime;
 let blackTime;
@@ -50,7 +47,10 @@ io.on("connection", (socket) => {
 
     //As the game is full, remove the game from gameList in server and clients.
     //------------
+    console.log(gameList);
+    console.log(`removing game ${game.room} from the list`);
     gameList.filter((game) => game.room !== room);
+    console.log(gameList);
     io.sockets.emit("existing_gameList_from_server", gameList);
     //------------
     socket.to(room).emit("server_request_for_gameData");
