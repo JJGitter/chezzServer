@@ -94,10 +94,14 @@ io.on("connection", (socket) => {
       .emit("opponent_moved", fromSquare, toSquare, pieceType, pieceColor);
   });
 
+  socket.on("stop_timer", () => {
+    clearInterval(timerInterval);
+  })
+
   socket.on("resign", (userColor) => {
     let room = Array.from(socket.rooms)[1];
     socket.to(room).emit("opponent_resigns", userColor);
-    clearInterval(timerInterval);
+    // clearInterval(timerInterval);
   });
 
   socket.on("offer_draw", () => {
@@ -108,7 +112,7 @@ io.on("connection", (socket) => {
   socket.on("draw_accepted", () => {
     let room = Array.from(socket.rooms)[1];
     socket.to(room).emit("receive_draw_accepted");
-    clearInterval(timerInterval);
+    // clearInterval(timerInterval);
   });
 });
 
