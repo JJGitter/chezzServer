@@ -7,16 +7,17 @@ import { Server } from "socket.io";
 const io = new Server({
   cors: { origin: "*", methods: ["GET", "POST"] },
 });
-let timerInterval;
-let whiteTime;
-let blackTime;
-let gameList = [];
-let roomID = 0;
 
 io.listen(process.env.PORT || 9000, () => {
   console.log("server is running");
   console.log("port=" + process.env.PORT);
 });
+
+let timerInterval;
+let whiteTime;
+let blackTime;
+let gameList = [];
+let roomID = 0;
 
 io.on("connection", (socket) => {
   console.log("Someone connected with socket id: " + socket.id);
@@ -96,7 +97,7 @@ io.on("connection", (socket) => {
 
   socket.on("stop_timer", () => {
     clearInterval(timerInterval);
-  })
+  });
 
   socket.on("resign", (userColor) => {
     let room = Array.from(socket.rooms)[1];
@@ -113,6 +114,34 @@ io.on("connection", (socket) => {
     let room = Array.from(socket.rooms)[1];
     socket.to(room).emit("receive_draw_accepted");
     // clearInterval(timerInterval);
+  });
+
+  socket.on("offer_rematch", () => {
+    let room = Array.from(socket.rooms)[1];
+    console.log("client1 offers draw");
+    socket.to(room).emit("rematch_offer_to_client");
+  });
+
+  socket.on("rematch_accepted", (timeControl) => {
+    let room = Array.from(socket.rooms)[1];
+    socket.to(room).emit("rematch_accepted_to_client");
+    switch (timeControl) {
+      case "classical":
+        whiteTime = 1800;
+        blackTime = 1800;
+        break;
+      case "rapid":
+        whiteTime = 600;
+        blackTime = 600;
+        break;
+      case "blitz":
+        whiteTime = 180;
+        blackTime = 180;
+        break;
+      default:
+        whiteTime = 60;
+        blackTime = 60;
+    }
   });
 });
 
