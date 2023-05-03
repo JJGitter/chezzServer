@@ -143,6 +143,11 @@ io.on("connection", (socket) => {
         blackTime = 60;
     }
   });
+
+  socket.on("leave_room", () => {
+    let room = Array.from(socket.rooms)[1];
+    socket.leave(room);
+  });
 });
 
 function provideTimeToClients(pieceColor, room) {
