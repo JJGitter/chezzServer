@@ -144,9 +144,10 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("leave_room", () => {
+  socket.on("returning_to_home_screen", () => {
     let room = Array.from(socket.rooms)[1];
     socket.leave(room);
+    socket.emit("existing_gameList_from_server", gameList);
   });
 });
 
