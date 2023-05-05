@@ -86,13 +86,13 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("piece_moved", (fromSquare, toSquare, pieceType, pieceColor) => {
+  socket.on("piece_moved", (fromSquare, toSquare, pieceType, pieceColor, promotionPiece) => {
     let room = Array.from(socket.rooms)[1];
     console.log("piece moved");
     provideTimeToClients(pieceColor, room);
     socket
       .to(room)
-      .emit("opponent_moved", fromSquare, toSquare, pieceType, pieceColor);
+      .emit("opponent_moved", fromSquare, toSquare, pieceType, pieceColor, promotionPiece);
   });
 
   socket.on("stop_timer", () => {
